@@ -1,87 +1,142 @@
 package Matcher.Excel;
 
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
-import java.util.Date;
+import java.util.Iterator;
 
 public class ExcelOps {
     //Sheet name should be same
-    public static boolean isExistsTie(String Sheetname, String excelonepath, String exceltwopath) throws IOException {
+    public static boolean searchInTie(Row rowInSheet1, XSSFSheet sheet2) throws IOException {
 
-
-        return true;
+        Iterator<Row> rowInSheet2 = sheet2.rowIterator();
+        while (rowInSheet2.hasNext()) {
+            Row rowIn2 = rowInSheet2.next();
+            if ( compareDatetime(rowInSheet1,rowIn2) && compareTransit(rowInSheet1,rowIn2) &&  compareEntityLocation(rowInSheet1,rowIn2) &&  compareAmount(rowInSheet1,rowIn2))
+             return true;        
+        }
+        
+        return false;
+        
 
     }
 
-    public static void getDatathroughExcel(String Sheetname, String excelonepath, String exceltwopath) throws IOException, ParseException {
+    private static boolean compareAmount(Row rowInSheet1, Row rowIn2) {
+
+        return false;
+    }
+
+    private static boolean compareEntityLocation(Row rowInSheet1, Row rowIn2) {
+        return false;
+    }
+
+    private static boolean compareTransit(Row rowInSheet1, Row rowIn2) {
+        Cell c1 = rowInSheet1.getCell(22);
+        Cell c2 = rowInSheet1.getCell(23);
+        String s1= getStringValue(c1) + getStringValue(c2);
+        String s2= getStringValue(rowIn2.getCell(4));
+        return s1.equals(s2);
+        //return false;
+    }
+
+    private static boolean compareDatetime(Row rowInSheet1, Row rowIn2) {
+        return false;
+    }
+    private static String getStringValue(Cell c1)
+    {
+        String s = null;
+        switch (c1.getCellType()) {
+            case STRING:
+                s = c1.getStringCellValue();
+                break;
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(c1)) {
+                    s = c1.getDateCellValue().toString();
+                } else {
+                    s= Double.toString(c1.getNumericCellValue());
+                }
+                break;
+            case BOOLEAN:
+                //c1.getBooleanCellValue() ;
+                System.out.println("Cell containing Boolean");
+                break;
+            case FORMULA:
+                System.out.println("Cell containing FORMUAL");
+                //c1.getCellFormula() ;
+                break;
+            default:
+                System.out.println("Cell containing junk");
+        }
+        return s;
+    }
+    public static void writeExcel( XSSFWorkbook wb ,String fileName) {
+
+        try {
+            File currDir = new File(".");
+            String path = currDir.getAbsolutePath();
+            String fileLocation = path.substring(0, path.length() - 1) + fileName + ".xlsx";
+            FileOutputStream out = new FileOutputStream(fileLocation);
+
+
+            wb.write(out);
+            out.flush();
+            out.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static void getDatathroughExcel(String Sheetname, String excelonepath, String exceltwopath, String excelthreepath) throws IOException, ParseException {
         //file input stream object
         FileInputStream inputStream1 = new FileInputStream(excelonepath);
         FileInputStream inputStream2 = new FileInputStream(exceltwopath);
+       // FileInputStream inputStream3 = new FileInputStream(excelthreepath);
+
         XSSFWorkbook workbook1 = new XSSFWorkbook(inputStream1);
         XSSFWorkbook workbook2 = new XSSFWorkbook(inputStream2);
+        //XSSFWorkbook workbook3 = new XSSFWorkbook(inputStream3);
+
         XSSFSheet x1 = workbook1.getSheet(Sheetname);
         XSSFSheet x2 = workbook2.getSheet(Sheetname);
+        //XSSFSheet x3 = workbook3.getSheet(Sheetname);
+
         int rowcount1 = x1.getPhysicalNumberOfRows();
         int rowcount2 = x2.getPhysicalNumberOfRows();
-        System.out.println("row count:"+ rowcount1);
-        System.out.println("row count:"+ rowcount2);
+     //   int rowcount3 = x3.getPhysicalNumberOfRows();
 
-	/*	Assert.assertEquals(rowcount1,rowcount2, "Sheets have different count of rows..");
-		Iterator<Row> rowInSheet1 = x1.rowIterator();
-		Iterator<Row> rowInSheet2 = x2.rowIterator();
-		while (rowInSheet1.hasNext()) {
-			int cellCounts1 = rowInSheet1.next().getPhysicalNumberOfCells();
-			int cellCounts2 = rowInSheet2.next().getPhysicalNumberOfCells();
-			Assert.assertEquals(cellCounts1, cellCounts2, "Sheets have different count of columns..");
-		}
-	 */
-        FormulaEvaluator evaluator = workbook1.getCreationHelper().createFormulaEvaluator();
+        System.out.println("Row counts: " + rowcount1 + "," + rowcount2 );
+
+        //FormulaEvaluator evaluator = workbook1.getCreationHelper().createFormulaEvaluator();
+        boolean found = false;
         for (int j = 1; j < rowcount1; j++) {
 
-            // Iterating through each cell
-            int cellCounts = x1.getRow(j).getPhysicalNumberOfCells();
-            //for (int k = 0; k < cellCounts; k++) {
-            // Getting individual cell
-			System.out.println("row *****************:"+ j+1);
-            Cell c1 = x1.getRow(j).getCell(0);
-            Cell c2 = x1.getRow(j).getCell(1);
-
-            if (c1.getCellType() == CellType.NUMERIC) {
-                // If cell type is numeric, we need to check if data is of Date type
-                if (DateUtil.isCellDateFormatted(c1)) {
-                    // Need to use DataFormatter to get data in given style otherwise it will come as time stamp
-                    DataFormatter df = new DataFormatter();
-                    //df.addFormat("dd/MM/yyyy", new java.text.SimpleDateFormat("yyyy/MM/dd"));
-                    java.text.SimpleDateFormat sm = new java.text.SimpleDateFormat("yyyy/MM/dd");
-                    java.text.SimpleDateFormat ind = new java.text.SimpleDateFormat("dd/MM/yyyy");
-                    String v1 = df.formatCellValue(c1);
-                    Date dt = sm.parse(v1);
-
-                    //String v2 = df.formatCellValue(c2);
-                    System.out.print("Date:" + v1);
-                    System.out.println(","+ind.format(dt));
-                } else {
-						/*	double v1 = c1.getNumericCellValue();
-							double v2 = c2.getNumericCellValue();
-							Assert.assertEquals(v1, v2, "Cell values are different.....");*/
-                    System.out.println("Its a number");
-                }
+            Row rowInSheet1 = x1.getRow(j);
+            found = searchInTie(rowInSheet1, x2);
+            if (found) {
+                System.out.println("Row :" + j);
+                x1.removeRow(rowInSheet1);
             }
-            if (c2.getCellType() == CellType.STRING) {
-                String v2 = c2.getStringCellValue();
-                v2 = v2.replaceAll(":","");
-                System.out.println("TIME:" + v2);
+        }
 
-            }
-
+        writeExcel(workbook1,excelthreepath);
+        if (workbook1 != null) {
+            workbook1.close();
+        }
+        if (workbook2 != null) {
+            workbook2.close();
         }
         System.out.println("Hurray! work books diff completed....");
     }
+
 }
 	
     
