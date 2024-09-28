@@ -12,18 +12,35 @@ import java.text.ParseException;
 // then press Enter. You can now see whitespace characters in your code.
 public class Main {
     public static void main(String[] args) throws IOException, ParseException {
-        // Press Alt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.println("Hello and welcome!");
-        System.out.println("Lets compare the sheets...............");
+        System.out.println("Lets compare the Files..");
+        String file1 = Constant.Excel1 + args[0];
+        String file2 = Constant.Excel2 + args[1];
 
-//        String Excel3=System.getProperty("user.dir")+"\\output\\"+"diff_report.xlsx";
+        System.out.println( file1 );
+        System.out.println(file2 );
+
+        File f = new File(file1);
+        if (!f.exists())
+        {
+            System.out.println( "File:["+file1 + "] Not found in the path..");
+            return;
+        }
+        f = new File(file2);
+        if (!f.exists())
+        {
+            System.out.println( "File:["+file2 + "] Not found in the path..");
+            return;
+        }
+
+        String file3=System.getProperty("user.dir")+"\\output\\"+"diff_report.xlsx";
 //        File source = new File(Constant.Excel1);
 //        File dest = new File(Excel3);
         //copyFile(source,dest);
         String Excel3="diff_report";
 
-        ExcelOps.getDatathroughExcel(Constant.SHEET_NAME,Constant.Excel1,Constant.Excel2,Excel3);
+        ExcelOps.getDatathroughExcel(Constant.SHEET_NAME,file1,file2,file3);
+        
+        System.out.println("Files..Compared.. successfulLy..");
 
     }
     private static void copyFile(File source, File dest) throws IOException {
